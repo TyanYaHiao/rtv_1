@@ -1,0 +1,58 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   app.c                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: fsmith <fsmith@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/01/12 17:30:27 by fsmith            #+#    #+#             */
+/*   Updated: 2019/09/24 20:32:00 by fsmith           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "shapes.h"
+#include "shape.h"
+
+t_shape			make_plane(t_vec3 pos, t_vec3 normal)
+{
+	return ((t_shape){
+		.type = PLANE,
+		.value = (t_shape_value){.plane = (t_plane){
+			.origin = pos,
+			.normal = normal
+		}},
+	});
+}
+
+static double	t_calc(const t_plane *plane, const t_ray *ray)
+{
+	const t_vec3 ray_self = vec3_sub(&plane->origin, &ray->origin);
+
+	return (vec3_dot(&ray_self, &plane->normal)
+		/ vec3_dot(&plane->normal, &ray->direction));
+}
+
+static t_vec3	ray_function(const t_ray *ray, double t)
+{
+	const t_vec3	dir_vec = vec3_multi(&ray->direction, t);
+
+	return (vec3_add(&ray->origin, &dir_vec));
+}
+
+bool			plane_intersect(
+	const struct s_shape *shape, const t_ray *ray, t_intersection *isect)
+{
+	const t_plane	*plane = &shape->value.plane;
+	const double	t = t_calc(plane, ray);
+
+	if (t < 0.001)
+		return (false);
+	if (t < isect->t)
+	{
+		isect->t = t;
+		isect->normal = plane->normal;
+		isect->p = ray_function(ray, t);
+		return (true);
+	}
+	return (false);
+}
